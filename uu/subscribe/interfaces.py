@@ -21,6 +21,27 @@ class IItemSubscriber(Interface):
     email = schema.BytesLine(title=u'Email address', required=False)
     name = schema.TextLine(title=u'Full name', required=False)
     
+    def signature():
+        """
+        return a composed key signature tuple of (namespace, user or email).
+        The special namespace 'email' will be used for subscriber objects
+        with no user field value, but containing an email value. If user 
+        field value is present, it will be preferred to email, unless the 
+        namespace is explicitly set to 'email'.
+        
+            * Both namespace and user id must be strings.
+            
+            * Valid example values:
+            
+                ('uuid', '68c47dd7-897d-43f1-b610-a6a8c885fe36')
+                ('member', 'johndoe')
+                ('email', 'jdoe@example.com')
+                ('openid', 'https://me.yahoo.com/seanupton')
+
+            * Raises a zope.interface.Invalid exception if signature is not
+                possible due to insufficient field data.
+        """
+    
     @invariant
     def user_or_email_provided(obj):
         """
@@ -29,6 +50,126 @@ class IItemSubscriber(Interface):
         """
         if not (obj.email or obj.user):
             raise Invalid('Neither email nor user id provided for user.')
+
+
+# container interface for persisting subscribers:
+
+class ISubscribers(Interface):
+    """
+    Container for subscribers; mapping is keyed off of a unique identifier
+    for a subscriber, either (but not both):
+    
+      (1) a tuple of (namespace, user id) [preferable if available].
+            
+            * Both namespace and user id must be strings.
+            
+            * Valid example values:
+            
+                ('uuid', '68c47dd7-897d-43f1-b610-a6a8c885fe36')
+                ('member', 'johndoe')
+                ('email', 'jdoe@example.com')
+                ('openid', 'https://me.yahoo.com/seanupton')
+    
+      (2) an email address.
+    
+    Note:   one record keyed off email and another record storing
+            the same email keyed off another schema are considered
+            distinct and *un-related*.
+    
+    Mapping/contained values MUST be objects implementing IItemSubscriber.
+
+    This interface is a partial mapping interface; for example, it does not
+    mandate nor guarantee that __setitem__() will be available (it is not
+    preferred; use of add() and __delitem__() are recommended instead, as
+    add() handles key generation from an object providing IItemSubscriber).
+    
+    Compositional identity: keys are composed as composite keys based on
+    field attributes/properties of each IItemSubscriber object value. 
+    This means that operations like containment, get, removal can use 
+    keys and values interchanably, and that add can deterministically 
+    generate a key based upon the subscriber object.
+    """
+    
+    def add(*args, **kwargs):
+        """
+        Add (and optionally construct and add) a subscriber object to the
+        this container of subscribers.
+        
+        The first positinal argument can be either an object providing the
+        IItemSubscriber interface or a dict of field values to construct
+        such an object (in such case, key names match field names in the
+        IItemSubscriber schema).
+        
+        Alternately, if positional arguments are omitted and keyword arguments
+        are provided, such that the keyword arguments are sufficient to 
+        construct an item subscriber.
+        
+        Returns a tuple of (generated key, subscriber object).
+
+        This method always returns a reference to a distinct subscriber
+        object within the tuple return value, such that the subscriber
+        object can be updated, and that updates are reflected in stored
+        (transient or persisted) values within this container. 
+        
+        Implementations should validate IItemSubscriber invariants on
+        objects to be added.
+        
+        When passed an object providing IItemSubscriber, it is to be 
+        considered implementation-specific and outside of interface scope
+        whether this operation stores a reference to that object or 
+        merely copies its values into a new object also providing
+        IItemSubscriber.  On the other hand, if this operation constructs
+        such an object, there is less confusion.
+        
+        If an existing record exists for the generated item, raise a
+        ValueError (callers should verify first if item exists via 
+        __contains__(key) or __contains__(subscriber) checks).
+
+        On an invalid key passed to add, raise a KeyError.
+        """
+    
+    def get(key, default=None):
+        """
+        Given a subscriber key as either tuple of (namespace, userid) or
+        as string email address, return record or default.
+        """
+    
+    def __getitem__(key):
+        """
+        Given a subscriber key as either tuple of (namespace, userid) or
+        as string email address, return record or raise KeyError.
+        """
+    
+    def __len__():
+        """Return length of container (number of records)."""
+    
+    def __contains__(key):
+        """
+        Return True if subscriber key in container keys; otherwise False.
+        May also be passed key as an object providing IItemSubscriber, in
+        which case, such object is used to make a key to check for
+        containment.
+        
+        If containment is checks on an object providing IItemSubscriber, it
+        will only return true if the object passed is identical to the object
+        stored.
+        """
+    
+    def __delitem__(key):
+        """
+        Delete subscriber from container given subscriber as any of:
+            
+            (1) object providing IItemSubscriber; needs not be
+                identical to object actually stored, used as a
+                template to generate a key for deletion.
+            
+            (2) dict providing a template used for generation of a
+                unique key for deletion.
+            
+            (3) a key as (namespace, user) tuple or string email address.
+        
+        Raises KeyError if key is not found.
+        """
 
 
 # adapter interfaces for some context:
@@ -101,19 +242,21 @@ class ISubscriptionIndexer(Interface):
 class ISubscriptionIndex(Interface):
     """
     Each index is named, and is assumed to be accessed either via a 
-    containing catalog or (with component lookup) as a named utility.
+    containing catalog (keyed by name) or component lookup of a named utility.
     
     Two-way index (forward/reverse) associating subscribers with item [U]UIDs.
     
     Forward index:
      * Keys are strings: unique ids of item objects (UID or UUID).
-     * Values are objects providing IItemSubscriber.
+     * Values are tuple composed keys suitable for ISubscribers containers,
+        in the format (namespace, user_or_email) where both contents of the
+        tuple key are strings.
      * Accessed via subscribers_for(item_uid)
     
     Reverse indexes:
-     * Keys are strings, id or email associated with an IItemSubscriber.
-       * Query function item_uids_for() can accept an IItemSubscriber object
-         as well as user id/email.
+     * Keys are tuple composed keys suitable for ISubscribers containers,
+        in the format (namespace, user_or_email) where both contents of the
+        tuple key are strings.
      * Values are string unique ids of item objects (e.g. UID or UUID).
      * Access via item_uids_for(subscriber)
     
@@ -121,9 +264,10 @@ class ISubscriptionIndex(Interface):
     
       * Mapping implementation is not implied here (e.g. OOBTree, dict, etc).
         
-      * Indexes are not responsible for resolving objects, but UIDs; 
+      * Indexes are not responsible for resolving item of subscriber 
+        objects, but UIDs of item objects and composed keys for subscribers; 
         other tools or utilities may be needed to resolve object references
-        from the UIDs provided.
+        from the UIDs and keys provided.
 
     Note about relationship names: they should be chosen such that:
       (1) a subscriber is considered the subject;
@@ -140,30 +284,45 @@ class ISubscriptionIndex(Interface):
         """
         Given an subscriber and and item_uid, associate for this index in
         both (subscriber to items) and (item to subscribers) mappings.
+
+        The subscriber argument can be either a two-item tuple key or
+        an IItemSubsriber object, in which case the key will be extracted
+        by calling the signature() method of the subscriber.
         """
     
     def unindex(subscriber, item_uid):
         """
         Given an subscriber and item_uid, remove any associations in this
         index between them.
+        
+        The subscriber argument can be either a two-item tuple key or
+        an IItemSubsriber object, in which case the key will be extracted
+        by calling the signature() method of the subscriber.
         """
     
     def item_uids_for(subscriber):
         """
-        Given subscriber as EITHER an object providing IItemSubscriber OR as
-        string id/email of subscriber, find and return tuple of item UIDs.
+        Find, return tuple of item UIDs given a subscriber for this index.
+        
+        The subscriber argument can be either a two-item tuple key or
+        an IItemSubsriber object, in which case the key will be extracted
+        by calling the signature() method of the subscriber.        
         """
     
     def subscribers_for(item_uid):
         """
-        Given an item UID, find and return a tuple of objects providing
-        IItemSubscriber for that item UID.
+        Given an item UID, find and return a tuple of subscriber signatures
+        (composed keys) for subscribers an item in this index.
         """
 
 
 class ISubscriptionCatalog(Interface):
     """
     Container for all subscription indexes.
+    
+    Note: subscribers MUST be identified by 64-bit integers in indexes
+    which can be resolved to persisted subscriber records stored as values
+    in the mapping self.subscribers.
     """
     
     indexes = schema.Object(
@@ -176,31 +335,115 @@ class ISubscriptionCatalog(Interface):
         title=u'Association metadata',
         description=u'Metadata or information associated with a '\
                     u'relationship, keyed off of the unique triple of '\
-                    u'(subscriber_id, item_id, relationship name) as '\
-                    u'subject/object/predicate.  Values are mappings '\
+                    u'(subscriber key, item uid, relationship/index name) '\
+                    u'as subject/object/predicate.  Values are mappings '\
                     u'of schemaless name/value pairs.',
         schema=IFullMapping,
         )
     
-    subscribers = schema.Object(
-        title=u'Registered subscribers',
-        description=u'All subscriber objects managed by this catalog',
-        schema=IFullMapping,)
+    subscriber_keys = schema.List(
+        title=u'Subscriber keys',
+        description=u'List of managed keys/signatures for subscribers.',
+        value_type=schema.Tuple(
+            value_type=schema.BytesLine(),
+            constraint=lambda x: len(x) == 2),
+        required=True) #required -- not None, even if empty
     
-    items = schema.Object(
+    item_uids = schema.List(
         title=u'Registered item uids',
         description=u'All items managed, referenced by this catalog',
-        schema=IFullMapping,)
+        value_type=schema.BytesLine(),
+        required=True) #required -- not None, even if empty
     
-    def search(**kwargs):
+    def search(query):
         """
-        Given keyword arguments, where keys are index/relationship names,
-        and values are either IItemSubscriber objects, or item UIDs, return
-        an iterable of intersecting resulting item UIDs or IItemSubscriber
-        objects, respectively such that all UIDs or subscribers returned
-        match all criteria.
+        Given query as dict/mapping, where keys are index/relationship
+        names, and values are any of:
+            
+            (1) IItemSubscriber object
+
+                * Search for item UIDs.
+            
+            (2) A two-item string tuple acting as a subscriber key/signature.
+            
+                * Search for item UIDs.
+            
+            (3) An single string, assumed to be an item UID.
+
+                * Search for subscribers, return actual IItemSubscriber
+                  objects obtained from ISubscribers utility or container
+                  for every key/signature returned by indexes.
+
+                  NOTE: if an IItemSubscriber object cannot be obtained
+                  for a key, create a temporary placeholder object
+                  implementing IItemSubscriber using key/signature 
+                  data, and use for each such case in result set.
         
         Search criteria/arguments for names of indexes not managed by this
         catalog should be ignored silently.
         """
+    
+    def index(uid, subscriber, names):
+        """
+        Index a set of named relationships enumerated in names -- this
+        argument may EITHER be a single string or a sequence of string 
+        names of relationships -- for item uid, subscriber to respective
+        indexes.  If an index for a name does not yet exist, this 
+        operation will create and manage such an index.
+        
+        The subscriber argument can be either a two-item tuple key or
+        an IItemSubsriber object, in which case the key will be extracted
+        by calling the signature() method of the subscriber.
+        """
+
+    def unindex(uid, subscriber, names):
+        """
+        Remove named relationships, and remove any association metadata
+        for each name in names for the given item uid and subscriber.  
+        
+        The subscriber argument can be either a two-item tuple key or
+        an IItemSubsriber object, in which case the key will be extracted
+        by calling the signature() method of the subscriber.
+        
+        Note: empty indexes are not removed or pruned from self.indexes
+        by this operation, as it is of little or no cost to leave them
+        around after creation, even if automatically created by index().
+        """
+    
+    def get_item(uid):
+        """
+        Method should attempt to get item, possibly delegating to framework
+        specific plugins (as registered utillities) to revolve UIDs to
+        actual item objects.
+        """
+
+# configuration interfaces for UID lookup
+
+class IUIDStrategy(Interface):
+    """
+    Base strategy interface for getting a UID based on object introspection.
+    
+    Likely used as adapter component.
+    """
+    
+    def getuid():
+        """return UID for context based upon a strategy, or None"""
+    
+    def __call__():
+        """
+        calling alias to getuid().
+        """
+
+
+class IItemResolver(Interface):
+    """
+    Item resolver interface, has get() function that takes UID, and performs
+    a traversal, lookup, or load of an item object to be returned.
+
+    Likely used as utility component.
+    """
+    
+    def get(uid):
+        """return resolved object for uid or None if not found"""
+
 
