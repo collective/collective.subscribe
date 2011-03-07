@@ -9,6 +9,7 @@ from zope.schema import getSchemaValidationErrors, ValidationError
 
 from uu.subscribe.interfaces import IItemSubscriber, ISubscribers
 from uu.subscribe.subscriber import ItemSubscriber, SubscribersContainer
+from uu.subscribe.tests.common import DATA, DATAKEY, MockSub
 
 
 class TestSubscriber(unittest.TestCase):
@@ -105,25 +106,6 @@ class TestSubscriber(unittest.TestCase):
             IItemSubscriber,
             subscriber)
 
-
-# MOCK COMMON:
-DATA = {
-            'name'  : u'Somebody',
-            'user'  : 'somebody',
-            'namespace' : 'member',
-            }
-
-DATAKEY = ('member', 'somebody')
-
-class MockSub(object):
-    implements(IItemSubscriber)
-    def __init__(self):
-        self.user = 'somebody'
-        self.namespace = 'member'
-        self.name = u'Somebody else'
-        self.email = None
-    def signature(self):
-        return (self.namespace, self.user or self.email)
 
 class ContainerTest(unittest.TestCase):
     """Test subscriber container/mapping without a ZODB fixture"""
