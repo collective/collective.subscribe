@@ -1,10 +1,12 @@
 from persistent import Persistent
 from persistent.dict import PersistentDict
 from zope.interface import implements
+from zope.component import queryUtility
 from BTrees.OOBTree import OOBTree
 
 from uu.subscribe.interfaces import ISubscriptionCatalog, ISubscriptionIndex
 from uu.subscribe.interfaces import IItemResolver, IItemSubscriber
+from uu.subscribe.interfaces import ISubscribers
 from uu.subscribe.index import SubscriptionIndex
 
 
@@ -84,7 +86,7 @@ class SubscriptionCatalog(Persistent):
     def get_item(self, uid):
         if not hasattr(self, '_v_resolver'):
             self._v_resolver = queryUtility(IItemResolver)
-        return self._v_resolver(uid)
+        return self._v_resolver.get(uid)
     
     def get_subscriber(self, signature):
         if not hasattr(self, '_v_container'):

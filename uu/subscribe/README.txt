@@ -303,6 +303,84 @@ We can get individual index objects:
 More examples of catalog and index usage are provided in the unit tests of
 this package.
 
+Putting it all together: component registrations
+------------------------------------------------
+
+Here is an example of using components from this package with registrations.
+Note that these are not provided by this package, but should be registered
+by consuming packages or applications.
+
+First, we'll use the global site manager from zope.component as our registry:
+
+    >>> from zope.component import getGlobalSiteManager, queryUtility
+    >>> gsm = getGlobalSiteManager()
+
+Next, we'll register utilities, and check lookup: 
+
+    >>> gsm.registerUtility(container, ISubscribers)
+    >>> gsm.registerUtility(catalog, ISubscriptionCatalog)
+    >>> con = queryUtility(ISubscribers)
+    >>> cat = queryUtility(ISubscriptionCatalog)
+    >>> assert con is container
+    >>> assert cat is catalog
+
+We can use catalog and container in concert; let's add a cataloged
+subscriber to the container (in practice, this is usually done in the
+opposite sequence, but it is not of consequence):
+
+    >>> k,v = container.add(henry)
+    >>> k,v = container.add(mary)
+
+Now that we have registered the subscribers container as a utility, we can
+use the catalog as a front to the container as well:
+
+    >>> assert catalog.get_subscriber(mary.signature()) is mary
+
+This is useful in a query:
+
+    >>> result = catalog.search({'likes':power.UID()})
+    >>> assert henry in [catalog.get_subscriber(sig) for sig in result]
+
+An advantage to using this approach is that they catalog component looks up
+the container once (per thread) and caches a volatile (_v_) reference to it.
+For a large result set, calling code could use a generator to create an 
+iterable over a result set of signatures, fetching subscribers as needed on
+iteration (or alternatively use a lazy sequence).
+
+We can create an item resolver utility and a UID adapter for our mock content:
+
+    >>> from uu.subscribe.interfaces import IUIDStrategy, IItemResolver
+    >>> from zope.interface import implements
+    >>> class DumbItemResolver(object):
+    ...     implements(IItemResolver)
+    ...     def get(self, uid):
+    ...         if uid == power.UID():
+    ...             return power
+    ...         if uid == reformation.UID():
+    ...             return reformation
+    ...         return None
+    ... 
+    >>> gsm.registerUtility(DumbItemResolver())
+    >>> resolver = queryUtility(IItemResolver)
+    >>> assert resolver.get(power.UID()) is power
+    >>> assert catalog.get_item(power.UID()) is power
+
+We can also create a UID adapter particular to a framework (in this case, 
+our framework is the contract of our mock content):
+
+    >>> from zope.interface import Interface
+    >>> from zope.component import adapts
+    >>> class MockContentUID(object):
+    ...     implements(IUIDStrategy)
+    ...     adapts(Interface) #adapts anything, in this trivial case
+    ...     def __init__(self, context):
+    ...         self.context = context
+    ...     def getuid(self):
+    ...         return self.context.UID()
+    ...     __call__ = getuid
+    ... 
+    >>> gsm.registerAdapter(MockContentUID)
+    >>> assert IUIDStrategy(reformation).getuid() == reformation.UID()
 
 About
 -----
