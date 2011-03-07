@@ -115,7 +115,7 @@ class SubscribersContainer(OOBTree):
         super(SubscribersContainer, self).__setitem__(key, value)
     
     def get(self, subscriber, default=None):
-        key = self._normalize_key(key)
+        key = self._normalize_key(subscriber)
         return super(SubscribersContainer, self).get(key, default)
     
     def __getitem__(self, key):
