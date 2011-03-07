@@ -1,36 +1,13 @@
 import uuid
-import sys
 import unittest2 as unittest
-from new import instancemethod as methodtype
 
-import persistent
-from zope.interface import Invalid, implements
-from zope.schema import getSchemaValidationErrors, ValidationError
+from zope.schema import ValidationError
 
 from uu.subscribe.interfaces import IItemSubscriber, ISubscriptionIndex
 from uu.subscribe.subscriber import ItemSubscriber
 from uu.subscribe.index import SubscriptionIndex
+from uu.subscribe.tests.common import DATA, DATAKEY, MockSub
 
-# MOCK COMMON:
-DATA = {
-            'name'  : u'Somebody',
-            'user'  : 'somebody',
-            'namespace' : 'member',
-            }
-
-DATAKEY = ('member', 'somebody')
-
-class MockSub(object):
-    implements(IItemSubscriber)
-    def __init__(self):
-        self.user = 'somebody'
-        self.namespace = 'member'
-        self.name = u'Somebody else'
-        self.email = None
-    def signature(self):
-        if self.email and self.namespace == 'email':
-            return ('email', self.email)
-        return (self.namespace, self.user or self.email)
 
 class IndexTest(unittest.TestCase):
     """Test index of item uids to subscriber signatures"""

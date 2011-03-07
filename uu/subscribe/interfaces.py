@@ -340,28 +340,18 @@ class ISubscriptionCatalog(Interface):
                     u'of schemaless name/value pairs.',
         schema=IFullMapping,
         )
-    
-    subscriber_keys = schema.List(
-        title=u'Subscriber keys',
-        description=u'List of managed keys/signatures for subscribers.',
-        value_type=schema.Tuple(
-            value_type=schema.BytesLine(),
-            constraint=lambda x: len(x) == 2),
-        required=True) #required -- not None, even if empty
-    
-    item_uids = schema.List(
-        title=u'Registered item uids',
-        description=u'All items managed, referenced by this catalog',
-        value_type=schema.BytesLine(),
-        required=True) #required -- not None, even if empty
-    
+        
     def search(query):
         """
+        Searches one or more indexes specified in query for relationships
+        between subscribers and items.  What is returned in the result
+        sequence (signatures or item uids) depends on the query passed.
+        
         Given query as dict/mapping, where keys are index/relationship
         names, and values are any of:
             
             (1) IItemSubscriber object
-
+            
                 * Search for item UIDs.
             
             (2) A two-item string tuple acting as a subscriber key/signature.
@@ -369,21 +359,15 @@ class ISubscriptionCatalog(Interface):
                 * Search for item UIDs.
             
             (3) An single string, assumed to be an item UID.
-
-                * Search for subscribers, return actual IItemSubscriber
-                  objects obtained from ISubscribers utility or container
-                  for every key/signature returned by indexes.
-
-                  NOTE: if an IItemSubscriber object cannot be obtained
-                  for a key, create a temporary placeholder object
-                  implementing IItemSubscriber using key/signature 
-                  data, and use for each such case in result set.
+            
+                * Search for subscribers, return signature tuples of 
+                  subscriber namespace and identifier.
         
         Search criteria/arguments for names of indexes not managed by this
         catalog should be ignored silently.
         """
     
-    def index(uid, subscriber, names):
+    def index(subscriber, uid, names):
         """
         Index a set of named relationships enumerated in names -- this
         argument may EITHER be a single string or a sequence of string 
@@ -395,8 +379,8 @@ class ISubscriptionCatalog(Interface):
         an IItemSubsriber object, in which case the key will be extracted
         by calling the signature() method of the subscriber.
         """
-
-    def unindex(uid, subscriber, names):
+    
+    def unindex(subscriber, uid, names):
         """
         Remove named relationships, and remove any association metadata
         for each name in names for the given item uid and subscriber.  
@@ -414,7 +398,14 @@ class ISubscriptionCatalog(Interface):
         """
         Method should attempt to get item, possibly delegating to framework
         specific plugins (as registered utillities) to revolve UIDs to
-        actual item objects.
+        actual item objects.  Return None if item is not found.
+        """
+    
+    def get_subscriber(signature):
+        """
+        Given a signature for a subscriber, get subscriber from
+        ISubscribers utility; may cache utility lookup.  Return None if
+        subscriber is not found.
         """
 
 # configuration interfaces for UID lookup
