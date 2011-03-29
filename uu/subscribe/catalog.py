@@ -36,7 +36,7 @@ class SubscriptionCatalog(Persistent):
                 query = query.signature()
             for idx in self.indexes:
                 sresult = sresult | set(
-                    self._search_for_items({idx : query})
+                    self._search_for_items({idx : query}))
             return sorted(tuple(sresult))
         # search for specific subscription relationship name:
         for (k,v) in query.items():
