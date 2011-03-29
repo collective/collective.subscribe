@@ -17,6 +17,8 @@ SUB1 = MockSub()
 SUB1.user = 'Ford'
 SUB2 = MockSub()
 SUB2.user = 'Toyota'
+SUB3 = MockSub()
+SUB3.user = 'GM'
 
 
 class CatalogTest(unittest.TestCase):
@@ -60,6 +62,27 @@ class CatalogTest(unittest.TestCase):
         assert len(r) == 0
         r = self.catalog.search({'love': SUB2}) #search for items SUB1 likes
         assert UID1 in r
+
+    def test_search_unnamed(self):
+        self.catalog = self.test_index()
+        self.catalog.index(SUB3, UID1, ('love',))
+        r = self.catalog.search(UID1)
+        assert SUB1.signature() in r 
+        assert SUB2.signature() in r
+        assert SUB3.signature() in r
+        named = self.catalog.search({'like':UID1})
+        assert SUB1.signature() in named
+        assert SUB2.signature() in named
+        assert SUB3.signature() not in named
+        self.catalog.index(SUB2, UID2, 'dislike')
+        assert len(self.catalog.search(UID2)) == 1
+        r = self.catalog.search(SUB2)
+        assert UID1 in r
+        assert UID2 in r
+        named = self.catalog.search({'dislike':SUB2})
+        assert UID2 in named
+        assert UID1 not in named
+        
     
     def test_search_subscribers(self):
         self.catalog = self.test_index()
