@@ -59,9 +59,24 @@ class SubscribersContainer(OOBTree):
     implements(ISubscribers)
     
     def __init__(self, *args, **kwargs):
-        self.size = Length()
         super(SubscribersContainer, self).__init__(*args, **kwargs)
-        
+        self.size = Length()
+    
+    # wrap superclass __getstate__ and __setstate__ to save attrs such
+
+    def __getstate__(self):
+        tree_state = super(SubscribersContainer, self).__getstate__()
+        attr_state = [(k,v) for k,v in self.__dict__.items()
+                      if not (k.startswith('_v_') or k.startswith('__'))]
+        return (tree_state, attr_state)
+    
+    def __setstate__(self, v):
+        tree_state = v[0]
+        attr_state = v[1]
+        for k,v in attr_state:
+            setattr(self, k, v)
+        super(SubscribersContainer, self).__setstate__(tree_state)
+    
     def _normalize_key(self, key):
         """
         given key or object providing IItemSubscriber, normalize unique key
