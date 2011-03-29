@@ -347,6 +347,28 @@ class ISubscriptionCatalog(Interface):
         between subscribers and items.  What is returned in the result
         sequence (signatures or item uids) depends on the query passed.
         
+        Unnamed query (all subscriptions)
+        ---------------------------------
+
+        If query is not a dict/mapping, then it may be of the following:
+
+            (1) IItemSubscriber object
+
+                Return sequence of all content items related in any 
+                way (any relationship name known) for subscriber.
+
+            (2) Two-item subscriber signature tuple.
+
+                Also returns item sequence for all items related.
+
+            (3) A UID string.
+
+                Returns a sequence of IItemSubscriber objects for all
+                subscribers related (any relationship name) for item.
+
+        Named Subscriptions
+        -------------------
+
         Given query as dict/mapping, where keys are index/relationship
         names, and values are any of:
             

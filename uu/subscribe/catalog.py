@@ -8,6 +8,7 @@ from uu.subscribe.interfaces import ISubscriptionCatalog, ISubscriptionIndex
 from uu.subscribe.interfaces import IItemResolver, IItemSubscriber
 from uu.subscribe.interfaces import ISubscribers
 from uu.subscribe.index import SubscriptionIndex
+from uu.subscribe.utils import valid_signature
 
 
 class SubscriptionIndexCollection(OOBTree):
@@ -29,6 +30,15 @@ class SubscriptionCatalog(Persistent):
     
     def _search_for_items(self, query):
         result = None
+        if IItemSubscriber.providedBy(query) or valid_signature(query):
+            sresult = set()
+            if not isinstance(query, tuple):
+                query = query.signature()
+            for idx in self.indexes:
+                sresult = sresult | set(
+                    self._search_for_items({idx : query})
+            return sorted(tuple(sresult))
+        # search for specific subscription relationship name:
         for (k,v) in query.items():
             if str(k) in self.indexes:
                 idx = self.indexes[str(k)]
@@ -48,6 +58,13 @@ class SubscriptionCatalog(Persistent):
     
     def _search_for_subscribers(self, query):
         result = None
+        if isinstance(query, basestring):
+            #unnamed, UID: query all indexes for subscribers of any sort
+            sresult = set()
+            for idx in self.indexes:
+                sresult = sresult | set(
+                    self._search_for_subscribers({idx:query}))
+            return sorted(tuple(sresult))
         for (k,v) in query.items():
             if str(k) in self.indexes:
                 idx = self.indexes[str(k)]
@@ -61,6 +78,11 @@ class SubscriptionCatalog(Persistent):
         return tuple(result)
         
     def search(self, query):
+        if isinstance(query, basestring):
+            return self._search_for_subscribers(query) #query: UID
+        if IItemSubscriber.providedBy(query) or valid_signature(query):
+            return self._search_for_items(query) # query: sub or sig
+        # query for named subscription relationships:
         k, v = query.items()[0]
         if IItemSubscriber.providedBy(v) or isinstance(v, tuple):
             return self._search_for_items(query) #tuple of uids
