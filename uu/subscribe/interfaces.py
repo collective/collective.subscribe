@@ -363,7 +363,7 @@ class ISubscriptionCatalog(Interface):
 
             (3) A UID string.
 
-                Returns a sequence of IItemSubscriber objects for all
+                Returns a sequence of subscriber signature tuples of all
                 subscribers related (any relationship name) for item.
 
         Named Subscriptions
