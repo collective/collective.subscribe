@@ -213,30 +213,6 @@ class IItemsFor(Interface):
         """
 
 
-class ISubscriptionIndexer(Interface):
-    """
-    Adapts an item context, responsible for associating a subscriber to the
-    item, or disassociating them, given a relationship name.
-    
-    Relationship names can be passed as string / unicode, but should be
-    normalized as UTF-8 formatted strings if passed as unicode.
-    """
-    
-    def associate(subscriber, rel):
-        """
-        Given a subscriber providing IItemSubscriber and a string/unicode
-        name of a relationship, bind the subscriber to the item in the context
-        of that relationship.
-        """
-    
-    def disassociate(subscriber, rel):
-        """
-        Given a subscriber providing IItemSubscriber or a string identifier
-        of user id or email, disassociate as needed for relationship named by
-        rel, passed as a string or unicode.
-        """
-
-
 # utility and index interfaces:
 
 class ISubscriptionIndex(Interface):
@@ -459,4 +435,46 @@ class IItemResolver(Interface):
     def get(uid):
         """return resolved object for uid or None if not found"""
 
+
+class ISubscriptionKeys(IFullMapping):
+    """
+    Utility component acts as many-to-one mapping of string keys to
+    subscriptions expressed as three-item tuples containing in order:
+    
+      1. Relationship name (string).
+    
+      2. Subscriber signature: output of IItemSubscriber.signature()
+    
+      3. String [U]UID of subscribed item.
+    
+    Other than specifying that keys are strings, and mandating that
+    components providing this interface provide a key generation 
+    function -- this interface does not provide guidance on the
+    algorithm or scheme of that key-generation function, which is
+    implementation-specific.
+    """
+    
+    key_description = schema.Text(
+        title=u'Key description',
+        description=u'Description of key generation algorithm used by '\
+                    u'implementation.',
+        required=False)
+    
+    def generate(name, signature, uid):
+        """Given name, signature, uid: generate a unique string key"""
+    
+    def add(name, signature, uid):
+        """
+        Given name, signature, uid: generate key and add key/value to
+        mapping; need not check for duplicate/existing, and should
+        just overwrite any existing entries for key.
+        """
+    
+    def __setitem__(key, value):
+        """
+        Set item with validation of key and value; should raise
+        a KeyError on a non-string key, and should raise a ValueError on
+        anything that is not a tuple of (string name, subscriber signature,
+        item uid string).
+        """
 
