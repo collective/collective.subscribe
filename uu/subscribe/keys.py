@@ -42,7 +42,7 @@ class SubscriptionKeys(OOBTree):
         """
         Add item to container/mapping as value using generated key, 
         return that key.  Validates, does not check for duplicates or
-        existing entries.
+        existing entries.  Returns generated key.
         """
         self._validate((name, signature, uid))
         key = mkkey(name, signature, uid)

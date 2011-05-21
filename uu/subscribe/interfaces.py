@@ -467,7 +467,8 @@ class ISubscriptionKeys(IFullMapping):
         """
         Given name, signature, uid: generate key and add key/value to
         mapping; need not check for duplicate/existing, and should
-        just overwrite any existing entries for key.
+        just overwrite any existing entries for key. Returns generated
+        key.
         """
     
     def __setitem__(key, value):
