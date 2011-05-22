@@ -189,7 +189,14 @@ class ISubscribersOf(Interface):
         If (relationship) name is unknown to the system, may raise a
         ValueError complaining about such.
         """
-
+    
+    def subscriptions_for(subscriber):
+        """
+        Given subscriber as object providing IItemSubscriber or as
+        a subscriber signature tuple, return all known relationship
+        names (list of strings) for which the subscriber is subscribed
+        to the item for the context adapted.
+        """
 
 class IItemsFor(Interface):
     """
