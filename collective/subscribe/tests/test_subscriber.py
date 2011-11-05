@@ -7,9 +7,9 @@ import persistent
 from zope.interface import Invalid, implements
 from zope.schema import getSchemaValidationErrors, ValidationError
 
-from uu.subscribe.interfaces import IItemSubscriber, ISubscribers
-from uu.subscribe.subscriber import ItemSubscriber, SubscribersContainer
-from uu.subscribe.tests.common import DATA, DATAKEY, MockSub
+from collective.subscribe.interfaces import IItemSubscriber, ISubscribers
+from collective.subscribe.subscriber import ItemSubscriber, SubscribersContainer
+from collective.subscribe.tests.common import DATA, DATAKEY, MockSub
 
 
 class TestSubscriber(unittest.TestCase):

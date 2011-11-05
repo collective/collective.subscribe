@@ -3,8 +3,8 @@ from zope.interface import implements
 from BTrees.OOBTree import OOBTree
 from BTrees.Length import Length
 
-from uu.subscribe.interfaces import IItemSubscriber, ISubscribers
-from uu.subscribe.utils import bind_field_properties
+from collective.subscribe.interfaces import IItemSubscriber, ISubscribers
+from collective.subscribe.utils import bind_field_properties
 
 
 class ItemSubscriber(persistent.Persistent):

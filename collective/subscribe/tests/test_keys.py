@@ -4,9 +4,9 @@ import uuid
 from hashlib import md5
 from new import instancemethod as methodtype
 
-from uu.subscribe.interfaces import ISubscriptionKeys
-from uu.subscribe.tests.common import MockSub
-from uu.subscribe.keys import SubscriptionKeys
+from collective.subscribe.interfaces import ISubscriptionKeys
+from collective.subscribe.tests.common import MockSub
+from collective.subscribe.keys import SubscriptionKeys
 
 
 SUB = MockSub()

@@ -2,7 +2,7 @@
 Introduction
 ============
 
-uu.subscribe contains components for associating users/principals as
+collective.subscribe contains components for associating users/principals as
 subsribers to an item of content, maintaining a relationship between
 them, and providing an index for such relationships.
 

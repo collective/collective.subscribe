@@ -1,7 +1,12 @@
 Changelog
 =========
 
-0.1devdev (unreleased)
-----------------------
+0.1
+---
 
-- Initial release
+- renamed from uu.subscribe to collective.subscribe for release as Plone
+  Collective project.
+
+- Initial release.
+
+

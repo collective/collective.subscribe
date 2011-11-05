@@ -3,7 +3,7 @@ import os
 
 version = '0.1dev'
 
-setup(name='uu.subscribe',
+setup(name='collective.subscribe',
       version=version,
       description="Components relating principals/users to content items.",
       long_description=open("README.txt").read() + "\n" +
@@ -23,7 +23,7 @@ setup(name='uu.subscribe',
       url='http://teamspace.upiq.org/trac',
       license='MIT',
       packages=find_packages(exclude=['ez_setup']),
-      namespace_packages=['uu'],
+      namespace_packages=['collective'],
       include_package_data=True,
       zip_safe=False,
       install_requires=[

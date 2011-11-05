@@ -4,8 +4,8 @@ from base64 import urlsafe_b64encode as encode
 from zope.interface import implements
 from BTrees.OOBTree import OOBTree
 
-from uu.subscribe.interfaces import ISubscriptionKeys
-from uu.subscribe.utils import valid_signature
+from collective.subscribe.interfaces import ISubscriptionKeys
+from collective.subscribe.utils import valid_signature
 
 
 # string form of tuple delimited by slashes, sub. sig. is numeric hash

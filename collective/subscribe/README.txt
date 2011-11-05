@@ -1,10 +1,10 @@
-uu.subscribe 
-============
+collective.subscribe 
+====================
 
 A library for user subscription to content
 ------------------------------------------
 
-uu.subscribe is a library package providing components for describing,
+collective.subscribe is a library package of components for describing,
 working with, and indexing named user-to-content relationships for
 any identfiable identification schemes for either users or for content
 unique ids.
@@ -104,8 +104,8 @@ This package deals with relationships between subscribers and content items.
 
 A subscriber is an entity that contains some identifying metadata fields:
 
-    >>> from uu.subscribe.interfaces import IItemSubscriber
-    >>> from uu.subscribe.subscriber import ItemSubscriber
+    >>> from collective.subscribe.interfaces import IItemSubscriber
+    >>> from collective.subscribe.subscriber import ItemSubscriber
     >>> subscriber = ItemSubscriber()
     >>> assert IItemSubscriber.providedBy(subscriber)
     >>> from zope.schema import getFieldsInOrder
@@ -183,8 +183,8 @@ things are worth note:
 
 Create a container:
 
-    >>> from uu.subscribe.interfaces import ISubscribers
-    >>> from uu.subscribe.subscriber import SubscribersContainer
+    >>> from collective.subscribe.interfaces import ISubscribers
+    >>> from collective.subscribe.subscriber import SubscribersContainer
     >>> container = SubscribersContainer()
     >>> assert ISubscribers.providedBy(container)
 
@@ -214,7 +214,7 @@ compatibility of the implementation of the object providing IItemSubscriber.
 For example, this mock subscriber object is not known to the container, so
 it keeps a copy:
 
-    >>> from uu.subscribe.tests.common import MockSub
+    >>> from collective.subscribe.tests.common import MockSub
     >>> subscriber2 = MockSub()
     >>> assert IItemSubscriber.providedBy(subscriber2)
     >>> signature, sub = container.add(subscriber2)
@@ -232,14 +232,14 @@ A subscriber is only interesting insofar as it can be related by association
 name to one or more content items.  The purpose of subscription is to 
 express the subscriber's relationship to the content item (and vice versa).
 In order to use subscription information, we need to be able to query it
-from indexes. For this purpose, uu.subscribe provides a purpose-specific
+from indexes. For this purpose, collective.subscribe provides a purpose-specific
 catalog in which each index represents a named relationship such as 'like',
 'subscribe', 'invited', 'confirmed', etc.
 
 Let's get a catalog:
 
-    >>> from uu.subscribe.interfaces import ISubscriptionCatalog
-    >>> from uu.subscribe.catalog import SubscriptionCatalog
+    >>> from collective.subscribe.interfaces import ISubscriptionCatalog
+    >>> from collective.subscribe.catalog import SubscriptionCatalog
     >>> catalog = SubscriptionCatalog()
     >>> assert ISubscriptionCatalog.providedBy(catalog)
 
@@ -294,7 +294,7 @@ will usually be created as needed when items are indexed.
 
 We can get individual index objects:
 
-    >>> from uu.subscribe.interfaces import ISubscriptionIndex
+    >>> from collective.subscribe.interfaces import ISubscriptionIndex
     >>> idx = catalog.indexes['likes']
     >>> assert ISubscriptionIndex.providedBy(idx)
 
@@ -348,7 +348,7 @@ iteration (or alternatively use a lazy sequence).
 
 We can create an item resolver utility and a UID adapter for our mock content:
 
-    >>> from uu.subscribe.interfaces import IUIDStrategy, IItemResolver
+    >>> from collective.subscribe.interfaces import IUIDStrategy, IItemResolver
     >>> from zope.interface import implements
     >>> class DumbItemResolver(object):
     ...     implements(IItemResolver)

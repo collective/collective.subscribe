@@ -1,6 +1,6 @@
 from zope.interface import implements
 
-from uu.subscribe.interfaces import IItemSubscriber
+from collective.subscribe.interfaces import IItemSubscriber
 
 
 # MOCK COMMON:

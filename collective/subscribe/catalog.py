@@ -4,11 +4,11 @@ from zope.interface import implements
 from zope.component import queryUtility
 from BTrees.OOBTree import OOBTree
 
-from uu.subscribe.interfaces import ISubscriptionCatalog, ISubscriptionIndex
-from uu.subscribe.interfaces import IItemResolver, IItemSubscriber
-from uu.subscribe.interfaces import ISubscribers
-from uu.subscribe.index import SubscriptionIndex
-from uu.subscribe.utils import valid_signature
+from collective.subscribe.interfaces import ISubscriptionCatalog, ISubscriptionIndex
+from collective.subscribe.interfaces import IItemResolver, IItemSubscriber
+from collective.subscribe.interfaces import ISubscribers
+from collective.subscribe.index import SubscriptionIndex
+from collective.subscribe.utils import valid_signature
 
 
 class SubscriptionIndexCollection(OOBTree):

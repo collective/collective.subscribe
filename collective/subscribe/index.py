@@ -3,7 +3,7 @@ from zope.interface import implements
 from zope.schema.fieldproperty import FieldProperty
 from BTrees.OOBTree import OOBTree, OOSet
 
-from uu.subscribe.interfaces import ISubscriptionIndex, IItemSubscriber
+from collective.subscribe.interfaces import ISubscriptionIndex, IItemSubscriber
 
 
 def _validate_signature(sig):

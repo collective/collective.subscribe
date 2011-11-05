@@ -3,11 +3,11 @@ import unittest2 as unittest
 
 from zope.schema import ValidationError
 
-from uu.subscribe.interfaces import IItemSubscriber, ISubscriptionIndex
-from uu.subscribe.subscriber import ItemSubscriber
-from uu.subscribe.catalog import SubscriptionCatalog
-from uu.subscribe.index import SubscriptionIndex
-from uu.subscribe.tests.common import DATA, DATAKEY, MockSub
+from collective.subscribe.interfaces import IItemSubscriber, ISubscriptionIndex
+from collective.subscribe.subscriber import ItemSubscriber
+from collective.subscribe.catalog import SubscriptionCatalog
+from collective.subscribe.index import SubscriptionIndex
+from collective.subscribe.tests.common import DATA, DATAKEY, MockSub
 
 
 # some basic common fixtures for this catalog test
