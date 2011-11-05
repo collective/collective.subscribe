@@ -20,7 +20,7 @@ setup(name='collective.subscribe',
       keywords='',
       author='Sean Upton',
       author_email='sean.upton@hsc.utah.edu',
-      url='https://github.com/collective/collective.subscribe'
+      url='https://github.com/collective/collective.subscribe',
       license='MIT',
       packages=find_packages(exclude=['ez_setup']),
       namespace_packages=['collective'],
