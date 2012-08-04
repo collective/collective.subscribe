@@ -1,8 +1,8 @@
 Changelog
 =========
 
-0.1
----
+0.1 (2012-08-04)
+----------------
 
 - renamed from uu.subscribe to collective.subscribe for release as Plone
   Collective project.
