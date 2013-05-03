@@ -6,7 +6,7 @@ version = '0.2.dev0'
 setup(name='collective.subscribe',
       version=version,
       description="Components relating principals/users to content items.",
-      long_description=open("README.txt").read() + "\n" +
+      long_description=open("README.rst").read() + "\n" +
                        open(os.path.join("docs", "HISTORY.txt")).read(),
       classifiers=[
         "Programming Language :: Python",
