@@ -1,14 +1,18 @@
 from persistent import Persistent
-from persistent.dict import PersistentDict
 from zope.interface import implements
 from zope.component import queryUtility
 from BTrees.OOBTree import OOBTree
 
-from collective.subscribe.interfaces import ISubscriptionCatalog, ISubscriptionIndex
-from collective.subscribe.interfaces import IItemResolver, IItemSubscriber
-from collective.subscribe.interfaces import ISubscribers
 from collective.subscribe.index import SubscriptionIndex
 from collective.subscribe.utils import valid_signature
+
+from interfaces import (
+    ISubscriptionCatalog,
+    ISubscriptionIndex,
+    IItemResolver,
+    IItemSubscriber,
+    ISubscribers
+    )
 
 
 class SubscriptionIndexCollection(OOBTree):
@@ -36,10 +40,10 @@ class SubscriptionCatalog(Persistent):
                 query = query.signature()
             for idx in self.indexes:
                 sresult = sresult | set(
-                    self._search_for_items({idx : query}))
+                    self._search_for_items({idx: query}))
             return sorted(tuple(sresult))
         # search for specific subscription relationship name:
-        for (k,v) in query.items():
+        for (k, v) in query.items():
             if str(k) in self.indexes:
                 idx = self.indexes[str(k)]
                 if IItemSubscriber.providedBy(v):
@@ -63,9 +67,9 @@ class SubscriptionCatalog(Persistent):
             sresult = set()
             for idx in self.indexes:
                 sresult = sresult | set(
-                    self._search_for_subscribers({idx:query}))
+                    self._search_for_subscribers({idx: query}))
             return sorted(tuple(sresult))
-        for (k,v) in query.items():
+        for (k, v) in query.items():
             if str(k) in self.indexes:
                 idx = self.indexes[str(k)]
                 uid = str(v)
@@ -79,13 +83,13 @@ class SubscriptionCatalog(Persistent):
         
     def search(self, query):
         if isinstance(query, basestring):
-            return self._search_for_subscribers(query) #query: UID
+            return self._search_for_subscribers(query)  # query: UID
         if IItemSubscriber.providedBy(query) or valid_signature(query):
-            return self._search_for_items(query) # query: sub or sig
+            return self._search_for_items(query)  # query: sub or sig
         # query for named subscription relationships:
         k, v = query.items()[0]
         if IItemSubscriber.providedBy(v) or isinstance(v, tuple):
-            return self._search_for_items(query) #tuple of uids
+            return self._search_for_items(query)  # tuple of uids
         return self._search_for_subscribers(query)
     
     def index(self, subscriber, uid, names):
